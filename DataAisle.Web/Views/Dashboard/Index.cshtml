@@ -1,0 +1,138 @@
+@model DataAisle.Web.Models.DashboardViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="kpi-grid stagger-children">
+    <div class="kpi-card">
+        <div class="kpi-label">Total rows loaded</div>
+        <div class="kpi-value" data-count="@Model.TotalRowsLoaded">@Model.TotalRowsLoaded.ToString("N0")</div>
+        <div class="kpi-sub">across @Model.TotalRuns runs</div>
+    </div>
+    <div class="kpi-card kpi-success">
+        <div class="kpi-label">Successful runs</div>
+        <div class="kpi-value" data-count="@Model.SuccessfulRuns">@Model.SuccessfulRuns</div>
+        <div class="kpi-sub">@Model.TotalRuns total · @(Model.TotalRuns - Model.SuccessfulRuns) failed</div>
+    </div>
+    <div class="kpi-card kpi-warning">
+        <div class="kpi-label">Rejected rows</div>
+        <div class="kpi-value" data-count="@Model.TotalRejected">@Model.TotalRejected.ToString("N0")</div>
+        <div class="kpi-sub">
+            @(Model.TotalRowsLoaded + Model.TotalRejected > 0
+                ? $"{(double)Model.TotalRejected / (Model.TotalRowsLoaded + Model.TotalRejected) * 100:F1}% rejection rate"
+                : "no data yet")
+        </div>
+    </div>
+    <div class="kpi-card kpi-success">
+        <div class="kpi-label">Quality checks</div>
+        <div class="kpi-value">@Model.QualityChecksPassed/@Model.QualityChecksTotal</div>
+        <div class="kpi-sub">all passed last run</div>
+    </div>
+</div>
+
+<div class="grid-2 section-gap">
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Rows loaded — last 30 days</span>
+            <span class="card-subtitle">daily totals</span>
+        </div>
+        <div class="chart-container" style="height:160px">
+            <canvas id="dailyLoadsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Recent pipeline runs</span>
+            <a asp-controller="Runs" asp-action="Index" class="btn-secondary" style="font-size:12px;padding:4px 10px;">View all</a>
+        </div>
+        <table class="data-table stagger-rows">
+            <thead>
+                <tr>
+                    <th>Run</th>
+                    <th>File</th>
+                    <th>Rows</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var run in Model.RecentRuns)
+                {
+                    <tr>
+                        <td><a asp-controller="Runs" asp-action="Detail" asp-route-id="@run.RunId" class="table-link">#@run.RunId</a></td>
+                        <td class="text-mono text-muted">@run.FileName</td>
+                        <td class="fw-500">@run.RowsIngested.ToString("N0")</td>
+                        <td class="text-muted">@run.DurationDisplay</td>
+                        <td>
+                            @if (run.Status == "success")
+                            {
+                                <span class="badge badge-success"><span class="badge-dot"></span>Success</span>
+                            }
+                            else if (run.Status == "failed")
+                            {
+                                <span class="badge badge-danger"><span class="badge-dot"></span>Failed</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning"><span class="badge-dot"></span>Running</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="card section-gap">
+    <div class="card-header">
+        <span class="card-title">Warehouse table sizes</span>
+        <span class="card-subtitle">current row counts</span>
+    </div>
+    <div class="stat-mini-grid stagger-children">
+        @foreach (var stat in Model.WarehouseStats)
+        {
+            <div class="stat-mini">
+                <div class="stat-mini-value">@stat.RowCount.ToString("N0")</div>
+                <div class="stat-mini-label">@stat.TableName</div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+    applyChartDefaults();
+
+    const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.DailyLoads.Select(d => d.Date.ToString("MMM dd"))));
+    const data   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.DailyLoads.Select(d => d.RowsLoaded)));
+
+    new Chart(document.getElementById('dailyLoadsChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: '#6366f1',
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
+</script>
+}

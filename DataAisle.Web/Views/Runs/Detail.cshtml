@@ -1,0 +1,109 @@
+@model DataAisle.Web.Models.RunDetailViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var run = Model.Run;
+}
+
+<div class="grid-3 section-gap stagger-children">
+    <div class="kpi-card @(run.Status == "success" ? "kpi-success" : "kpi-danger")">
+        <div class="kpi-label">Status</div>
+        <div class="kpi-value" style="font-size:18px;margin-top:4px">
+            @if (run.Status == "success")
+            {
+                <span class="badge badge-success" style="font-size:13px;padding:5px 12px"><span class="badge-dot"></span>Success</span>
+            }
+            else
+            {
+                <span class="badge badge-danger" style="font-size:13px;padding:5px 12px"><span class="badge-dot"></span>Failed</span>
+            }
+        </div>
+        <div class="kpi-sub">Duration: @run.DurationDisplay</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Rows loaded</div>
+        <div class="kpi-value" data-count="@run.RowsIngested">@run.RowsIngested.ToString("N0")</div>
+        <div class="kpi-sub">into fact_sales</div>
+    </div>
+    <div class="kpi-card kpi-warning">
+        <div class="kpi-label">Rejected rows</div>
+        <div class="kpi-value" data-count="@Model.RejectedRowCount">@Model.RejectedRowCount.ToString("N0")</div>
+        <div class="kpi-sub">saved to etl_rejected_rows</div>
+    </div>
+</div>
+
+<div class="grid-2 section-gap">
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Run details</span>
+        </div>
+        <table class="data-table">
+            <tbody>
+                <tr>
+                    <td class="text-muted" style="width:40%">Run ID</td>
+                    <td class="text-mono fw-500">#@run.RunId</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Pipeline</td>
+                    <td class="text-mono">@run.PipelineName</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Source file</td>
+                    <td class="text-mono">@run.FileName</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Started</td>
+                    <td>@run.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Finished</td>
+                    <td>@(run.EndTime.HasValue ? run.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "—")</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(run.ErrorMessage))
+                {
+                    <tr>
+                        <td class="text-muted">Error</td>
+                        <td class="text-danger text-mono" style="font-size:11px;word-break:break-all">@run.ErrorMessage</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Quality checks</span>
+            <span class="badge @(Model.QualityChecks.All(c => c.Passed) ? "badge-success" : "badge-warning")">
+                @Model.QualityChecks.Count(c => c.Passed)/@Model.QualityChecks.Count passed
+            </span>
+        </div>
+        @foreach (var check in Model.QualityChecks)
+        {
+            <div class="check-row">
+                <div>
+                    <div class="check-name">@check.CheckName</div>
+                    <div class="check-message">@check.Message</div>
+                </div>
+                @if (check.Passed)
+                {
+                    <span class="badge badge-success"><span class="badge-dot"></span>Passed</span>
+                }
+                else
+                {
+                    <span class="badge badge-danger">@check.FailedCount failed</span>
+                }
+            </div>
+        }
+        @if (!Model.QualityChecks.Any())
+        {
+            <div class="empty-state">No quality checks recorded for this run.</div>
+        }
+    </div>
+
+</div>
+
+<div style="margin-top:8px">
+    <a asp-controller="Runs" asp-action="Index" class="btn-secondary">
+        ← Back to runs
+    </a>
+</div>

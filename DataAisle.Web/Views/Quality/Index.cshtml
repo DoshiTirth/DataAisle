@@ -1,0 +1,113 @@
+@model DataAisle.Web.Models.QualityViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="grid-2 section-gap">
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Pass / fail by check</span>
+            <span class="card-subtitle">all runs combined</span>
+        </div>
+        <div class="chart-container" style="height:220px">
+            <canvas id="qualityChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Check summary</span>
+        </div>
+        @foreach (var s in Model.CheckSummaries)
+        {
+            var total = s.PassCount + s.FailCount;
+            var pct   = total > 0 ? (double)s.PassCount / total * 100 : 0;
+            <div class="check-row">
+                <div>
+                    <div class="check-name">@s.CheckName</div>
+                    <div class="check-message">@s.PassCount passed · @s.FailCount failed</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:13px;font-weight:500;color:@(pct==100?"var(--success-text)":"var(--warning-text)")">@pct.ToString("F0")%</div>
+                    <div style="width:80px;height:4px;background:#f1f5f9;border-radius:2px;margin-top:4px">
+                        <div style="width:@pct.ToString("F0")%;height:100%;background:@(pct==100?"var(--success)":"var(--warning)");border-radius:2px;transition:width 0.6s ease"></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
+<div class="card section-gap">
+    <div class="card-header">
+        <span class="card-title">Recent check log</span>
+        <span class="card-subtitle">last 30 entries</span>
+    </div>
+    <table class="data-table stagger-rows">
+        <thead>
+            <tr>
+                <th>Run</th>
+                <th>Check name</th>
+                <th>Failed count</th>
+                <th>Message</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model.RecentChecks)
+            {
+                <tr>
+                    <td><a asp-controller="Runs" asp-action="Detail" asp-route-id="@c.RunId" class="table-link">#@c.RunId</a></td>
+                    <td class="text-mono">@c.CheckName</td>
+                    <td class="@(c.FailedCount > 0 ? "text-warning fw-500" : "text-muted")">@c.FailedCount</td>
+                    <td class="text-muted" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@c.Message</td>
+                    <td>
+                        @if (c.Passed)
+                        {
+                            <span class="badge badge-success"><span class="badge-dot"></span>Passed</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-danger">Failed</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+    applyChartDefaults();
+
+    const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.CheckSummaries.Select(s => s.CheckName.Replace("_check_","·").Replace("_"," "))));
+    const passes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CheckSummaries.Select(s => s.PassCount)));
+    const fails  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CheckSummaries.Select(s => s.FailCount)));
+
+    new Chart(document.getElementById('qualityChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Passed', data: passes, backgroundColor: '#22c55e', borderRadius: 4, borderSkipped: false },
+                { label: 'Failed', data: fails,  backgroundColor: '#ef4444', borderRadius: 4, borderSkipped: false },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 900, easing: 'easeOutQuart' },
+            plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 10, padding: 16, font: { size: 12 } } } },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
+</script>
+}

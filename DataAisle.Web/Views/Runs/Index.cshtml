@@ -1,0 +1,53 @@
+@model List<DataAisle.Web.Models.PipelineRun>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">All pipeline runs</span>
+        <span class="card-subtitle">@Model.Count total</span>
+    </div>
+    <table class="data-table stagger-rows">
+        <thead>
+            <tr>
+                <th>Run ID</th>
+                <th>Pipeline</th>
+                <th>Source file</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Rows loaded</th>
+                <th>Rejected</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var run in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Runs" asp-action="Detail" asp-route-id="@run.RunId" class="table-link">#@run.RunId</a></td>
+                    <td class="text-mono">@run.PipelineName</td>
+                    <td class="text-mono text-muted">@run.FileName</td>
+                    <td class="text-muted">@run.StartTime.ToString("MMM dd, HH:mm:ss")</td>
+                    <td class="text-muted">@run.DurationDisplay</td>
+                    <td class="fw-500">@run.RowsIngested.ToString("N0")</td>
+                    <td class="@(run.RowsFailed > 0 ? "text-warning" : "text-muted")">@run.RowsFailed.ToString("N0")</td>
+                    <td>
+                        @if (run.Status == "success")
+                        {
+                            <span class="badge badge-success"><span class="badge-dot"></span>Success</span>
+                        }
+                        else if (run.Status == "failed")
+                        {
+                            <span class="badge badge-danger"><span class="badge-dot"></span>Failed</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning"><span class="badge-dot"></span>Running</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

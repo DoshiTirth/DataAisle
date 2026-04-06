@@ -1,0 +1,95 @@
+@model DataAisle.Web.Models.WarehouseViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="grid-2 section-gap stagger-children">
+    <div class="kpi-card kpi-success">
+        <div class="kpi-label">Total revenue</div>
+        <div class="kpi-value" style="font-size:24px">$@Model.TotalRevenue.ToString("N2")</div>
+        <div class="kpi-sub">across all stores</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Total units sold</div>
+        <div class="kpi-value" data-count="@Model.TotalUnitsSold">@Model.TotalUnitsSold.ToString("N0")</div>
+        <div class="kpi-sub">all products combined</div>
+    </div>
+</div>
+
+<div class="card section-gap">
+    <div class="card-header">
+        <span class="card-title">Table sizes</span>
+        <span class="card-subtitle">current row counts</span>
+    </div>
+    <div class="stat-mini-grid stagger-children">
+        @foreach (var stat in Model.TableStats)
+        {
+            <div class="stat-mini">
+                <div class="stat-mini-value">@stat.RowCount.ToString("N0")</div>
+                <div class="stat-mini-label">@stat.TableName</div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card section-gap">
+    <div class="card-header">
+        <span class="card-title">Sales revenue trend</span>
+        <span class="card-subtitle">daily total</span>
+    </div>
+    <div class="chart-container" style="height:240px">
+        <canvas id="salesChart"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+    applyChartDefaults();
+
+    const labels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.SalesTrend.Select(s => s.Date.ToString("MMM dd"))));
+    const revenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.SalesTrend.Select(s => Math.Round((double)s.Revenue, 2))));
+
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data: revenue,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99,102,241,0.08)',
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#6366f1',
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1000, easing: 'easeOutQuart' },
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: v => '$' + Number(v).toLocaleString()
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ' $' + ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})
+                    }
+                }
+            }
+        }
+    });
+</script>
+}
