@@ -6,10 +6,17 @@ A full-stack data engineering project built with Python, SQL Server, and ASP.NET
 
 ## Screenshots
 
-| Dashboard | Pipeline Runs | Data Quality | Warehouse Stats |
-|---|---|---|---|
-| KPI cards + charts | Run history table | Pass/fail charts | Revenue trend |
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
 
+### Pipeline runs
+![Pipeline runs](docs/screenshots/pipeline-runs.png)
+
+### Data quality
+![Data quality](docs/screenshots/data-quality.png)
+
+### Warehouse stats
+![Warehouse stats](docs/screenshots/warehouse-stats.png)
 ---
 
 ## Tech Stack
