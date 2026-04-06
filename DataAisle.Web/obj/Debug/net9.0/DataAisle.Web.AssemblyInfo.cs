@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DataAisle.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5b6cbc5c4a77d5e2952b591d04cfa7088567ad49")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8bcbb5301c1ddd25e303e54f7fbfb3cfbc427700")]
 [assembly: System.Reflection.AssemblyProductAttribute("DataAisle.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DataAisle.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

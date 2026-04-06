@@ -1,25 +1,28 @@
-﻿@model ErrorViewModel
+@model DataAisle.Web.Models.ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Something went wrong";
+    ViewData["ActivePage"] = "";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;">
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin-bottom:20px;opacity:0.25">
+        <circle cx="24" cy="24" r="22" stroke="#0f172a" stroke-width="2"/>
+        <path d="M24 14v12M24 32v2" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+
+    <h1 style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:8px;">Something went wrong</h1>
+    <p style="font-size:13px;color:#64748b;max-width:400px;line-height:1.6;margin-bottom:24px;">
+        An unexpected error occurred while processing your request.
+        @if (Model?.ShowRequestId == true)
+        {
+            <span>Request ID: <code style="font-family:Consolas,monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">@Model.RequestId</code></span>
+        }
     </p>
-}
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+    <a asp-controller="Dashboard" asp-action="Index" class="btn-primary">
+        ← Back to dashboard
+    </a>
+
+</div>

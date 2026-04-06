@@ -115,6 +115,20 @@
             <!-- Page content -->
             <main class="page-content">
                 <div class="content-fade-in">
+                @if (TempData["Success"] != null)
+                {
+                    <div style="background:#dcfce7;border:0.5px solid #bbf7d0;color:#166534;padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="6"/><path d="M4.5 7l2 2 3-3"/></svg>
+                        @TempData["Success"]
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div style="background:#fee2e2;border:0.5px solid #fecaca;color:#991b1b;padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="6"/><path d="M7 4v3M7 9.5v.5"/></svg>
+                        @TempData["Error"]
+                    </div>
+                }
                     @RenderBody()
                 </div>
             </main>

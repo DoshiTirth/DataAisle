@@ -48,23 +48,35 @@ public class RunsController : Controller
 
     public IActionResult Trigger()
     {
-        var pythonPath   = _config["Pipeline:PythonPath"] ?? "python";
-        var scriptPath   = _config["Pipeline:ScriptPath"] ?? "";
-
-        if (!string.IsNullOrEmpty(scriptPath))
+        var pythonPath = _config["Pipeline:PythonPath"] ?? "python";
+        var scriptPath = _config["Pipeline:ScriptPath"] ?? "";
+    
+        if (string.IsNullOrEmpty(scriptPath))
+        {
+            TempData["Error"] = "Pipeline script path not configured in appsettings.json";
+            return RedirectToAction("Index");
+        }
+    
+        try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
             {
-                FileName  = pythonPath,
-                Arguments = $"\"{scriptPath}\"",
+                FileName               = pythonPath,
+                Arguments              = $"\"{scriptPath}\"",
                 UseShellExecute        = false,
                 RedirectStandardOutput = false,
                 CreateNoWindow         = true,
+                WorkingDirectory       = System.IO.Path.GetDirectoryName(scriptPath) ?? ""
             };
             System.Diagnostics.Process.Start(psi);
+            TempData["Success"] = "Pipeline triggered successfully — check back in a few seconds.";
         }
-
-        return RedirectToAction("Index");
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Failed to trigger pipeline: {ex.Message}";
+        }
+    
+        return RedirectToAction("Index", "Dashboard");
     }
 }
 

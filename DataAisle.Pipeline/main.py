@@ -1,3 +1,4 @@
+# ============================================================
 # DataAisle Pipeline — main.py
 # Orchestrates the full ETL pipeline:
 #   1. Ingest  → read CSV file
@@ -9,6 +10,7 @@
 # Usage:
 #   python main.py                         # processes all CSVs in data/
 #   python main.py --file data/sales.csv   # processes one specific file
+# ============================================================
 
 import argparse
 import logging
@@ -27,7 +29,9 @@ from load.sql_loader import (
     save_rejected_rows,
 )
 
+# ------------------------------------------------------------------
 # Logging setup — writes to console AND a daily log file
+# ------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
@@ -52,11 +56,15 @@ def run_pipeline(csv_path: Path) -> bool:
     run_id = start_pipeline_run(str(csv_path))
 
     try:
+        # ----------------------------------------------------------
         # Step 1 — Ingest
+        # ----------------------------------------------------------
         logger.info("Step 1/5 — Ingesting CSV")
         raw_df = read_csv(csv_path)
 
+        # ----------------------------------------------------------
         # Step 2 — Clean
+        # ----------------------------------------------------------
         logger.info("Step 2/5 — Cleaning data")
         clean_df, rejected_df = clean(raw_df)
 
@@ -66,18 +74,24 @@ def run_pipeline(csv_path: Path) -> bool:
         if clean_df.empty:
             raise ValueError("No clean rows remaining after cleaning step")
 
+        # ----------------------------------------------------------
         # Step 3 — Quality checks
+        # ----------------------------------------------------------
         logger.info("Step 3/5 — Running quality checks")
         checks_passed = run_checks(clean_df, run_id)
         if not checks_passed:
             logger.warning("Some quality checks failed — pipeline will continue "
                            "but results are flagged in etl_data_quality_log")
 
+        # ----------------------------------------------------------
         # Step 4 — Dimension mapping
+        # ----------------------------------------------------------
         logger.info("Step 4/5 — Mapping dimensions")
         fact_df = map_dimensions(clean_df)
 
+        # ----------------------------------------------------------
         # Step 5 — Load
+        # ----------------------------------------------------------
         logger.info("Step 5/5 — Loading fact_sales")
         rows_loaded = load_fact_sales(fact_df)
 
@@ -114,6 +128,11 @@ def main():
         default=None,
         help="Path to a specific CSV file. If omitted, processes all CSVs in data/",
     )
+    parser.add_argument(
+        "--enrich",
+        action="store_true",
+        help="Enrich dim_product from Open Food Facts API after loading",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -135,6 +154,15 @@ def main():
     logger.info(
         f"All done — {success_count}/{len(files)} pipelines succeeded"
     )
+
+    if getattr(args, 'enrich', False):
+        logger.info("Running product enrichment from Open Food Facts API...")
+        try:
+            from enrich_products import enrich
+            count = enrich(["beverages", "snacks", "dairy"])
+            logger.info(f"Enrichment complete — {count} new products added")
+        except Exception as e:
+            logger.warning(f"Enrichment failed (non-critical): {e}")
 
     if success_count < len(files):
         sys.exit(1)
